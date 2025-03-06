@@ -1,0 +1,119 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/v1/signup":
+    post:
+      summary: User Registration
+      tags:
+      - Users
+      parameters: []
+      responses:
+        '201':
+          description: User registered successfully
+        '422':
+          description: Email already taken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: object
+                  properties:
+                    full_name:
+                      type: string
+                    email:
+                      type: string
+                    password:
+                      type: string
+                      format: password
+                    mobile_number:
+                      type: string
+                  required:
+                  - full_name
+                  - email
+                  - password
+                  - mobile_number
+  "/api/v1/login":
+    post:
+      summary: User Login
+      tags:
+      - Users
+      parameters: []
+      responses:
+        '200':
+          description: Login successful
+        '401':
+          description: Invalid email or password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                  format: password
+              required:
+              - email
+              - password
+  "/api/v1/forgot_password":
+    post:
+      summary: Forgot Password
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '200':
+          description: OTP sent successfully
+        '422':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+              required:
+              - email
+  "/api/v1/reset_password":
+    post:
+      summary: Reset Password
+      tags:
+      - Authentication
+      parameters: []
+      responses:
+        '200':
+          description: Password reset successful
+        '422':
+          description: User not found
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                otp:
+                  type: string
+                new_password:
+                  type: string
+                  format: password
+              required:
+              - email
+              - otp
+              - new_password
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: localhost:3000

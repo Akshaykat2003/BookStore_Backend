@@ -44,6 +44,9 @@ group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
+  gem 'rspec-rails'
+  gem 'rswag-specs'
+
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
   gem "brakeman", require: false
 
@@ -67,6 +70,7 @@ group :test do
   gem 'faker'                # Faker for generating random data
   gem 'database_cleaner-active_record'  # Clean test database after tests
   gem 'shoulda-matchers'  
+  gem 'rswag-specs'
 end
 
 gem "bcrypt", "~> 3.1"
@@ -74,3 +78,6 @@ gem "bcrypt", "~> 3.1"
 gem "jwt", "~> 2.10"
 gem 'dotenv-rails', groups: [:development,:test]
 
+gem 'rswag'
+gem 'rswag-api'
+gem 'rswag-ui'
