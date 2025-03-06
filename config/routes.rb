@@ -5,8 +5,8 @@ namespace :api do
     post 'signup',to: 'users#signup'
     post 'login', to: 'users#login'
 
-    post "forgot", to: "users#forgot_password"
-    post "reset", to: "users#reset_password"
+    post "forgot_password", to: "users#forgot_password"
+    post "reset_password", to: "users#reset_password"
   end
 end
 end

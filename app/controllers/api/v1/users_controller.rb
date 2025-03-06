@@ -1,7 +1,6 @@
 class Api::V1::UsersController < ApplicationController
   skip_before_action :authenticate_request, only: [:forgot_password, :reset_password]
 
-
   def signup
     result = UserService.signup(user_params)
     if result[:success]
@@ -10,7 +9,6 @@ class Api::V1::UsersController < ApplicationController
       render json: { errors: result[:error] }, status: :unprocessable_entity
     end
   end
-
 
   def login
     result = UserService.login(params[:email], params[:password])
@@ -21,31 +19,27 @@ class Api::V1::UsersController < ApplicationController
     end
   end
 
-
   def forgot_password
     result = PasswordService.forgot_password(params[:email])
     if result[:success]
       render json: { message: result[:message] }, status: :ok
     else
-      render json: { error: result[:error] }, status: :unprocessable_entity
+      render json: { errors: result[:error] }, status: :unprocessable_entity # FIXED
     end
   end
-
 
   def reset_password
     result = PasswordService.reset_password(params[:email], params[:otp], params[:new_password])
     if result[:success]
       render json: { message: result[:message] }, status: :ok
     else
-      render json: { error: result[:error] }, status: :unprocessable_entity
+      render json: { errors: result[:error] }, status: :unprocessable_entity # FIXED
     end
   end
 
-
-
   private 
+
   def user_params
     params.require(:user).permit(:full_name, :email, :password, :mobile_number)
   end
-
 end

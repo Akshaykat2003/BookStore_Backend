@@ -54,12 +54,19 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+ 
 end
 
 group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "capybara"
   gem "selenium-webdriver"
+
+  gem 'rspec-rails'          # RSpec for testing
+  gem 'factory_bot_rails'    # Factory Bot for test data
+  gem 'faker'                # Faker for generating random data
+  gem 'database_cleaner-active_record'  # Clean test database after tests
+  gem 'shoulda-matchers'  
 end
 
 gem "bcrypt", "~> 3.1"

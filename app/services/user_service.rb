@@ -16,7 +16,7 @@ class UserService
       token =JwtService.encode({user_id:user.id})
       {success:true,user: user,token: token}
     else
-      {success:false,error: "Invalid email or passsword"}
+      {success:false,error: "Invalid email or password"}
    end
  end
 
