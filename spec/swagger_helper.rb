@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
-
 RSpec.configure do |config|
   # Specify the root folder where OpenAPI JSON/YAML files are generated
   config.openapi_root = Rails.root.join('swagger').to_s  # Updated method
