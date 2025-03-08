@@ -18,8 +18,15 @@ module Backend
     config.autoload_lib(ignore: %w[assets tasks])
     config.action_controller.raise_on_missing_callback_actions = false
 
+
     # Configuration for the application, engines, and railties goes here.
     #
+    config.generators do |g|
+      g.test_framework :rspec,
+                       request_specs: false, # Disable request specs generation
+                       integration_tool: :rspec # Explicitly define integration tool
+    end
+    
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #

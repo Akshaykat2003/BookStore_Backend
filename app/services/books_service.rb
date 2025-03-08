@@ -25,7 +25,7 @@ class BooksService
       book = Book.new(
         book_name: row["book_name"],
         author_name: row["author_name"],
-        book_mrp_price: row["book_mrp_price"],
+        book_mrp: row["book_mrp"],
         discounted_price: row["discounted_price"],
         quantity: row["quantity"],
         book_details: row["book_details"],
@@ -58,10 +58,7 @@ class BooksService
   end
 
   def self.destroy_book(book)
-    if book.destroy
-      { success: true, message: "Book deleted successfully" }
-    else
-      { success: false, errors: book.errors.full_messages }
-    end
+    book.update(is_deleted: true) # ✅ Soft delete instead of actual delete
+    { success: true, message: "Book marked as deleted" }
   end
 end

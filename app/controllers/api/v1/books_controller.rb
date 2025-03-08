@@ -1,7 +1,11 @@
 class Api::V1::BooksController < ApplicationController
   skip_before_action :authenticate_request
-  before_action :set_book, only: [:show,:update, :destroy, :is_deleted]
+  before_action :set_book, only: [:show, :update, :destroy, :is_deleted]
 
+  def index
+    books = Book.all
+    render json: { success: true, books: books }, status: :ok
+  end
 
   def create
     result = BooksService.create_book(book_params)
@@ -16,10 +20,8 @@ class Api::V1::BooksController < ApplicationController
     render json: { success: true, book: @book }
   end
 
-
   def update
     result = BooksService.update_book(@book, book_params)
-
     if result[:success]
       render json: result
     else
@@ -44,6 +46,7 @@ class Api::V1::BooksController < ApplicationController
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Book not found' }, status: :not_found
   end
+
   def book_params
     params.require(:book).permit(:book_name, :author_name, :book_mrp, 
                                  :discounted_price, :quantity, :book_details, 

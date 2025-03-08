@@ -1,127 +1,138 @@
 require 'swagger_helper'
 
 RSpec.describe 'Users API', type: :request do
-  let!(:existing_user) { User.create!(full_name: 'Akshay Katoch', email: 'akshay@example.com', password: 'Test@123', mobile_number: '9876543210') }
+  let!(:existing_user) { create(:user, full_name: 'Akshay Katoch', email: 'akshay@example.com', password: 'Test@123', mobile_number: '9876543210') }
   let!(:otp) { PasswordService.generate_otp }
 
   before do
     PasswordService::OTP_STORAGE[existing_user.email] = { otp: otp, otp_expiry: Time.now + 5 * 60 }
   end
 
-  path '/api/v1/signup' do
-    post 'User Registration' do
-      tags 'Users'
-      consumes 'application/json'
-      produces 'application/json'
-      parameter name: :user, in: :body, schema: {
-        type: :object,
-        properties: {
+  describe 'POST /api/v1/signup' do
+    context 'with valid parameters' do
+      let(:valid_params) do
+        {
           user: {
-            type: :object,
-            properties: {
-              full_name: { type: :string },
-              email: { type: :string },
-              password: { type: :string, format: :password },
-              mobile_number: { type: :string }
-            },
-            required: ['full_name', 'email', 'password', 'mobile_number']
+            full_name: 'New User',
+            email: 'newuser@example.com',
+            password: 'Test@123',
+            mobile_number: '9876543211'
           }
         }
-      }
-
-      response '201', 'User registered successfully' do
-        let(:user) { { user: { full_name: 'New User', email: 'newuser@example.com', password: 'Test@123', mobile_number: '9876543211' } } }
-        run_test!
       end
 
-      response '422', 'Email already taken' do
-        let(:user) { { user: { full_name: 'Akshay Katoch', email: existing_user.email, password: 'Test@123', mobile_number: '9876543210' } } }
-        run_test!
+      it 'registers a new user successfully' do
+        post '/api/v1/signup', params: valid_params, as: :json
+        expect(response).to have_http_status(201)
+        expect(json['message']).to eq('User registered successfully')
+        expect(json['user']).to be_present
+      end
+    end
+
+    context 'with duplicate email' do
+      let(:duplicate_params) do
+        {
+          user: {
+            full_name: 'Akshay Katoch',
+            email: existing_user.email,
+            password: 'Test@123',
+            mobile_number: '9876543210'
+          }
+        }
+      end
+
+      it 'returns email already taken error' do
+        post '/api/v1/signup', params: duplicate_params, as: :json
+        expect(response).to have_http_status(422)
+        expect(json['errors']).to include('Email has already been taken')
       end
     end
   end
 
-  path '/api/v1/login' do
-    post 'User Login' do
-      tags 'Users'
-      consumes 'application/json'
-      produces 'application/json'
-      parameter name: :credentials, in: :body, schema: {
-        type: :object,
-        properties: {
-          email: { type: :string },
-          password: { type: :string, format: :password }
-        },
-        required: ['email', 'password']
-      }
+  describe 'POST /api/v1/login' do
+    context 'with valid credentials' do
+      let(:valid_credentials) { { email: existing_user.email, password: 'Test@123' } }
 
-      response '200', 'Login successful' do
-        let(:credentials) { { email: existing_user.email, password: 'Test@123' } }
-        run_test!
+      it 'logs in successfully' do
+        post '/api/v1/login', params: valid_credentials, as: :json
+        expect(response).to have_http_status(200)
+        expect(json['message']).to eq('Login successful')
+        expect(json['user']).to be_present
+        expect(json['token']).to be_present
       end
+    end
 
-      response '401', 'Invalid email or password' do
-        let(:credentials) { { email: existing_user.email, password: 'WrongPass' } }
-        run_test!
+    context 'with invalid credentials' do
+      let(:invalid_credentials) { { email: existing_user.email, password: 'WrongPass' } }
+
+      it 'returns unauthorized error' do
+        post '/api/v1/login', params: invalid_credentials, as: :json
+        expect(response).to have_http_status(401)
+        expect(json['errors']).to eq('Invalid email or password')
       end
     end
   end
 
-  
-  path '/api/v1/forgot_password' do
-    post 'Forgot Password' do
-      tags 'Authentication'
-      consumes 'application/json'
-      produces 'application/json'
-      parameter name: :email, in: :body, schema: {
-        type: :object,
-        properties: {
-          email: { type: :string }
-        },
-        required: ['email']
-      }
+  describe 'POST /api/v1/forgot_password' do
+    context 'with existing email' do
+      let(:valid_email) { { email: existing_user.email } }
 
-      response '200', 'OTP sent successfully' do
-        let(:email) { { email: existing_user.email } }
-        run_test!
+      it 'sends OTP successfully' do
+        # Stub the mailer to avoid actual email sending in tests
+        allow(UserMailer).to receive(:send_otp).and_return(double(deliver_now: true))
+        post '/api/v1/forgot_password', params: valid_email, as: :json
+        expect(response).to have_http_status(200)
+        expect(json['message']).to eq('OTP sent to your email')
       end
+    end
 
-      response '422', 'User not found' do
-        let(:email) { { email: 'nonexistent@example.com' } }
-        run_test!
+    context 'with non-existent email' do
+      let(:invalid_email) { { email: 'nonexistent@example.com' } }
+
+      it 'returns user not found error' do
+        post '/api/v1/forgot_password', params: invalid_email, as: :json
+        expect(response).to have_http_status(422)
+        expect(json['errors']).to eq('User not found')
       end
     end
   end
 
-  path '/api/v1/reset_password' do
-    post 'Reset Password' do
-      tags 'Authentication'
-      consumes 'application/json'
-      produces 'application/json'
-      parameter name: :reset_data, in: :body, schema: {
-        type: :object,
-        properties: {
-          email: { type: :string },
-          otp: { type: :string },
-          new_password: { type: :string, format: :password }
-        },
-        required: ['email', 'otp', 'new_password']
-      }
+  describe 'POST /api/v1/reset_password' do
+    context 'with valid data' do
+      let(:valid_reset_data) { { email: existing_user.email, otp: otp, new_password: 'NewPass@123' } }
 
-      response '200', 'Password reset successful' do
-        let(:reset_data) { { email: existing_user.email, otp: otp, new_password: 'NewPass@123' } }
-        run_test!
-      end
-
-      response '422', 'Invalid OTP' do
-        let(:reset_data) { { email: existing_user.email, otp: 'wrong_otp', new_password: 'NewPass@123' } }
-        run_test!
-      end
-
-      response '422', 'User not found' do
-        let(:reset_data) { { email: 'nonexistent@example.com', otp: '123456', new_password: 'NewPass@123' } }
-        run_test!
+      it 'resets password successfully' do
+        post '/api/v1/reset_password', params: valid_reset_data, as: :json
+        expect(response).to have_http_status(200)
+        expect(json['message']).to eq('Password reset successfully')
       end
     end
+
+    context 'with invalid OTP' do
+      let(:invalid_otp_data) { { email: existing_user.email, otp: 'wrong_otp', new_password: 'NewPass@123' } }
+
+      it 'returns invalid OTP error' do
+        post '/api/v1/reset_password', params: invalid_otp_data, as: :json
+        expect(response).to have_http_status(422)
+        expect(json['errors']).to eq('Invalid OTP')
+      end
+    end
+
+    context 'with non-existent user' do
+      let(:invalid_user_data) { { email: 'nonexistent@example.com', otp: '123456', new_password: 'NewPass@123' } }
+
+      it 'returns user not found error' do
+        post '/api/v1/reset_password', params: invalid_user_data, as: :json
+        expect(response).to have_http_status(422)
+        expect(json['errors']).to eq('User not found')
+      end
+    end
+  end
+
+  def json
+    JSON.parse(response.body)
+  rescue JSON::ParserError => e
+    puts "Failed to parse JSON response: #{response.body}"
+    raise e
   end
 end
