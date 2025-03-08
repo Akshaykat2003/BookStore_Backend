@@ -14,7 +14,7 @@ RSpec.describe PasswordService, type: :service do
         expect(PasswordService::OTP_STORAGE[user.email]).not_to be_nil
       end
     end
-
+    
     context "when user does not exist" do
       it "returns an error" do
         result = PasswordService.forgot_password("nonexistent@example.com")

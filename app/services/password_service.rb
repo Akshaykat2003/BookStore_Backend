@@ -34,6 +34,7 @@ class PasswordService
     { success: true, message: "Password reset successfully" }
   end
 
+  
   private
 
   def self.generate_otp
